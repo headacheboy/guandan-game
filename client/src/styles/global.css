@@ -1,0 +1,47 @@
+:root {
+  --table-green: #1a5f2a;
+  --table-green-dark: #0d3d18;
+  --card-white: #ffffff;
+  --card-red: #d32f2f;
+  --card-black: #212121;
+  --gold: #ffd700;
+  --shadow: rgba(0, 0, 0, 0.3);
+}
+
+body {
+  background: var(--table-green);
+  min-height: 100vh;
+  user-select: none;
+}
+
+.card-red {
+  color: var(--card-red);
+}
+
+.card-black {
+  color: var(--card-black);
+}
+
+@keyframes slideUp {
+  from {
+    transform: translateY(20px);
+    opacity: 0;
+  }
+  to {
+    transform: translateY(0);
+    opacity: 1;
+  }
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+.animate-slide-up {
+  animation: slideUp 0.3s ease-out;
+}
+
+.animate-fade-in {
+  animation: fadeIn 0.3s ease-out;
+}

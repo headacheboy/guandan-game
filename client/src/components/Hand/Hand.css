@@ -1,0 +1,14 @@
+.hand {
+  display: flex;
+  justify-content: center;
+  align-items: flex-end;
+  padding: 10px;
+}
+
+.hand-card {
+  transition: transform 0.15s ease;
+}
+
+.hand-card:hover {
+  z-index: 10;
+}

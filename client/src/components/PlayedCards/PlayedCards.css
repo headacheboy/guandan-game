@@ -1,0 +1,25 @@
+.played-cards {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+.played-by {
+  color: rgba(255, 255, 255, 0.8);
+  font-size: 12px;
+  margin-bottom: 4px;
+}
+
+.played-cards-list {
+  display: flex;
+  justify-content: center;
+}
+
+.played-card {
+  transition: transform 0.1s ease;
+}
+
+.played-card:hover {
+  transform: translateY(-4px);
+  z-index: 10;
+}
