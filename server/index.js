@@ -20,6 +20,22 @@ const roomManager = new RoomManager();
 io.on('connection', (socket) => {
   console.log(`用户连接: ${socket.id}`);
 
+  // 检查是否是断线重连
+  socket.on('checkReconnect', (data) => {
+    const { previousId } = data;
+    if (roomManager.canReconnect(previousId)) {
+      const info = roomManager.getDisconnectedInfo(previousId);
+      socket.emit('canReconnect', {
+        canReconnect: true,
+        roomId: info.roomId,
+        playerName: info.playerName,
+        timeRemaining: 60000 // 简化处理
+      });
+    } else {
+      socket.emit('canReconnect', { canReconnect: false });
+    }
+  });
+
   socket.on('createRoom', (data) => {
     const room = roomManager.createRoom(socket.id, data.playerName);
     socket.join(room.id);
@@ -33,8 +49,23 @@ io.on('connection', (socket) => {
       socket.emit('error', { message: result.error });
     } else {
       socket.join(data.roomId);
-      io.to(data.roomId).emit('roomUpdated', result.room);
-      console.log(`用户加入房间: ${data.roomId}`);
+
+      if (result.reconnected) {
+        // 断线重连成功
+        socket.emit('reconnected', {
+          room: result.room,
+          gameState: result.gameState,
+          message: result.message
+        });
+        io.to(data.roomId).emit('playerReconnected', {
+          playerId: socket.id,
+          room: result.room
+        });
+      } else {
+        // 正常加入
+        io.to(data.roomId).emit('roomUpdated', result.room);
+        console.log(`用户加入房间: ${data.roomId}`);
+      }
     }
   });
 
@@ -47,7 +78,13 @@ io.on('connection', (socket) => {
   });
 
   socket.on('setReady', (data) => {
+    console.log(`setReady from ${socket.id}, roomId: ${data.roomId}`);
     const result = roomManager.setPlayerReady(data.roomId, socket.id);
+    console.log('setReady result:', {
+      hasRoom: !!result.room,
+      gameStarted: result.gameStarted,
+      players: result.room?.players?.map(p => ({ id: p.id, name: p.name, ready: p.ready }))
+    });
     if (result.room) {
       io.to(data.roomId).emit('roomUpdated', result.room);
     }
@@ -88,7 +125,17 @@ io.on('connection', (socket) => {
     console.log(`用户断开: ${socket.id}`);
     const result = roomManager.handleDisconnect(socket.id);
     if (result.roomId) {
-      io.to(result.roomId).emit('roomUpdated', result.room);
+      if (result.disconnected) {
+        // 玩家在游戏中断线，通知其他玩家
+        io.to(result.roomId).emit('playerDisconnected', {
+          playerId: socket.id,
+          room: result.room,
+          gameState: result.gameState,
+          reconnectTimeout: result.reconnectTimeout
+        });
+      } else {
+        io.to(result.roomId).emit('roomUpdated', result.room);
+      }
     }
   });
 });
