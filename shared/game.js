@@ -1,6 +1,7 @@
-import { createDeck, shuffleDeck, dealCards, removeCards, sortCards } from '../shared/cards.js';
-import { identifyPattern } from '../shared/patterns.js';
-import { isValidPlay, calculateLevelUp, isGameOver, getWinner } from '../shared/rules.js';
+import { createDeck, shuffleDeck, dealCards, removeCards, sortCards } from './cards.js';
+import { identifyPattern } from './patterns.js';
+import { isValidPlay, calculateLevelUp, isGameOver, getWinner } from './rules.js';
+import { createGameStats, updateGameStats, calculateScore, getScoreMessage } from './score.js';
 
 export const GAME_PHASES = {
   WAITING: 'waiting',
@@ -28,17 +29,20 @@ export function createInitialGameState() {
     lastPlayer: -1,
     passCount: 0,
     finishOrder: [],
-    roundHistory: [],
+    playHistory: [],
     teamLevels: { A: 2, B: 2 },
     roundsPlayed: 0,
     tributes: [],
+    gameStats: createGameStats(),
+    lastRoundResult: null,
     message: '等待开始游戏'
   };
 }
 
 export function startNewRound(state) {
   const deck = shuffleDeck(createDeck());
-  const hands = dealCards(deck, 4);
+  const levelToPlay = state.currentLevel || 2;
+  const hands = dealCards(deck, 4, levelToPlay);
   
   const newPlayers = state.players.map((p, i) => ({
     ...p,
@@ -58,6 +62,7 @@ export function startNewRound(state) {
     lastPlayer: -1,
     passCount: 0,
     finishOrder: [],
+    playHistory: [],
     tributes: [],
     message: `游戏开始，${newPlayers[starter].name}先出牌`
   };
@@ -89,7 +94,7 @@ export function playCards(state, playerIndex, cards) {
     return { ...state, message: validation.reason };
   }
   
-  const newHand = removeCards(state.players[playerIndex].hand, cards);
+  const newHand = sortCards(removeCards(state.players[playerIndex].hand, cards), state.currentLevel);
   const finished = newHand.length === 0;
   
   let newPlayers = [...state.players];
@@ -106,6 +111,15 @@ export function playCards(state, playerIndex, cards) {
   }
   
   const newPattern = validation.pattern;
+  const historyEntry = {
+    type: 'play',
+    playerIndex,
+    playerName: newPlayers[playerIndex].name,
+    cards: [...cards],
+    pattern: newPattern,
+    timestamp: Date.now()
+  };
+  
   let newState = {
     ...state,
     players: newPlayers,
@@ -113,6 +127,7 @@ export function playCards(state, playerIndex, cards) {
     lastPlayer: playerIndex,
     passCount: 0,
     finishOrder: newFinishOrder,
+    playHistory: [...state.playHistory, historyEntry],
     message: `${newPlayers[playerIndex].name}出了${newPattern.cards.length}张牌`
   };
   
@@ -146,21 +161,40 @@ export function pass(state, playerIndex) {
     return { ...state, message: '你是上一个出牌的，不能跳过' };
   }
   
+  const historyEntry = {
+    type: 'pass',
+    playerIndex,
+    playerName: state.players[playerIndex].name,
+    timestamp: Date.now()
+  };
+  
   let newState = {
     ...state,
     passCount: state.passCount + 1,
+    playHistory: [...state.playHistory, historyEntry],
     message: `${state.players[playerIndex].name}不出`
   };
   
   const activePlayers = state.players.filter(p => !p.finished);
   if (newState.passCount >= activePlayers.length - 1) {
+    let nextPlayer = state.lastPlayer;
+    
+    if (state.players[state.lastPlayer].finished) {
+      nextPlayer = (state.lastPlayer + 1) % 4;
+      let attempts = 0;
+      while (state.players[nextPlayer].finished && attempts < 4) {
+        nextPlayer = (nextPlayer + 1) % 4;
+        attempts++;
+      }
+    }
+    
     newState = {
       ...newState,
       lastPlay: null,
       lastPlayer: -1,
       passCount: 0,
-      currentPlayer: state.lastPlayer,
-      message: `${state.players[state.lastPlayer].name}获得出牌权`
+      currentPlayer: nextPlayer,
+      message: `${state.players[nextPlayer].name}获得出牌权`
     };
   } else {
     newState = advanceToNextPlayer(newState);
@@ -185,14 +219,27 @@ function advanceToNextPlayer(state) {
 }
 
 function endRound(state) {
-  const result = calculateLevelUp(state.finishOrder, [0, 2], [1, 3]);
+  const levelUpResult = calculateLevelUp(state.finishOrder, [0, 2], [1, 3]);
   
+  const teamLevelsBefore = { ...state.teamLevels };
   const newTeamLevels = { ...state.teamLevels };
-  if (result.winner === 'A') {
-    newTeamLevels.A = Math.min(14, newTeamLevels.A + result.levels);
+  
+  if (levelUpResult.winner === 'A') {
+    newTeamLevels.A = Math.min(14, newTeamLevels.A + levelUpResult.levels);
   } else {
-    newTeamLevels.B = Math.min(14, newTeamLevels.B + result.levels);
+    newTeamLevels.B = Math.min(14, newTeamLevels.B + levelUpResult.levels);
   }
+  
+  const roundScore = calculateScore(state.finishOrder, teamLevelsBefore, newTeamLevels);
+  
+  const newGameStats = updateGameStats(state.gameStats, {
+    winner: levelUpResult.winner,
+    score: roundScore.score,
+    levelsUp: levelUpResult.levels,
+    finishOrder: state.finishOrder,
+    teamLevelsBefore,
+    teamLevelsAfter: newTeamLevels
+  });
   
   const gameEnded = isGameOver(newTeamLevels, 13);
   const winner = getWinner(newTeamLevels, 13);
@@ -202,15 +249,25 @@ function endRound(state) {
     level: p.id % 2 === 0 ? newTeamLevels.A : newTeamLevels.B
   }));
   
+  const winnerScore = levelUpResult.winner === 'A' ? roundScore.score.A : roundScore.score.B;
+  const scoreMsg = getScoreMessage(winnerScore, levelUpResult.winner, levelUpResult.levels);
+  
   return {
     ...state,
     phase: gameEnded ? GAME_PHASES.GAME_END : GAME_PHASES.ROUND_END,
     teamLevels: newTeamLevels,
     players: newPlayers,
-    currentLevel: result.winner === 'A' ? newTeamLevels.A : newTeamLevels.B,
+    currentLevel: levelUpResult.winner === 'A' ? newTeamLevels.A : newTeamLevels.B,
+    gameStats: newGameStats,
+    lastRoundResult: {
+      winner: levelUpResult.winner,
+      levelsUp: levelUpResult.levels,
+      score: roundScore.score,
+      finishOrder: state.finishOrder
+    },
     message: gameEnded 
-      ? `游戏结束！${winner === 'A' ? '玩家队' : 'AI队'}获胜！`
-      : `本轮结束，${result.winner === 'A' ? '玩家队' : 'AI队'}升${result.levels}级`
+      ? `游戏结束！${winner === 'A' ? '玩家队' : 'AI队'}获胜！总比分 ${newGameStats.teamAWins}:${newGameStats.teamBWins}`
+      : scoreMsg
   };
 }
 

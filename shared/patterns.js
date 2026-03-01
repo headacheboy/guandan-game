@@ -73,106 +73,110 @@ export function identifyPattern(cards) {
   const groupCounts = Object.entries(groups).map(([rank, cards]) => ({ rank, count: cards.length }));
   
   if (n === 1) {
-    return { type: PATTERN_TYPES.SINGLE, mainRank: sorted[0].rank, cards: sorted };
+    return { type: PATTERN_TYPES.SINGLE, mainRank: sorted[0].rank, mainCard: sorted[0], cards: sorted };
   }
   
   if (n === 2) {
     if (sorted[0].rank === sorted[1].rank) {
-      return { type: PATTERN_TYPES.PAIR, mainRank: sorted[0].rank, cards: sorted };
+      return { type: PATTERN_TYPES.PAIR, mainRank: sorted[0].rank, mainCard: sorted[0], cards: sorted };
     }
     return null;
   }
   
   if (n === 3) {
     if (sorted[0].rank === sorted[1].rank && sorted[1].rank === sorted[2].rank) {
-      return { type: PATTERN_TYPES.TRIPLE, mainRank: sorted[0].rank, cards: sorted };
+      return { type: PATTERN_TYPES.TRIPLE, mainRank: sorted[0].rank, mainCard: sorted[0], cards: sorted };
     }
     return null;
   }
   
   if (n === 4) {
-    if (sorted[0].rank === sorted[1].rank && 
-        sorted[1].rank === sorted[2].rank && 
-        sorted[2].rank === sorted[3].rank) {
-      return { type: PATTERN_TYPES.BOMB_FOUR, mainRank: sorted[0].rank, cards: sorted };
+    // Check four kings first (highest priority for 4 cards)
+    const jokers = sorted.filter(c => c.isJoker);
+    if (jokers.length === 4) {
+      return { type: PATTERN_TYPES.FOUR_KINGS, mainRank: 'kings', cards: sorted };
     }
-    
+
+    if (sorted[0].rank === sorted[1].rank &&
+        sorted[1].rank === sorted[2].rank &&
+        sorted[2].rank === sorted[3].rank) {
+      return { type: PATTERN_TYPES.BOMB_FOUR, mainRank: sorted[0].rank, mainCard: sorted[0], cards: sorted };
+    }
+
     const triple = groupCounts.find(g => g.count === 3);
     if (triple) {
-      return { type: PATTERN_TYPES.TRIPLE_WITH_ONE, mainRank: triple.rank, cards: sorted };
+      const tripleCard = sorted.find(c => c.rank === triple.rank);
+      return { type: PATTERN_TYPES.TRIPLE_WITH_ONE, mainRank: triple.rank, mainCard: tripleCard, cards: sorted };
     }
-    
+
     return checkStraight(sorted);
   }
   
   if (n === 5) {
     if (sorted.every(c => c.rank === sorted[0].rank)) {
-      return { type: PATTERN_TYPES.BOMB_FIVE, mainRank: sorted[0].rank, cards: sorted };
+      return { type: PATTERN_TYPES.BOMB_FIVE, mainRank: sorted[0].rank, mainCard: sorted[0], cards: sorted };
     }
-    
+
     const triple = groupCounts.find(g => g.count === 3);
     if (triple) {
       const pair = groupCounts.find(g => g.count === 2);
       if (pair) {
-        return { type: PATTERN_TYPES.TRIPLE_WITH_PAIR, mainRank: triple.rank, cards: sorted };
+        const tripleCard = sorted.find(c => c.rank === triple.rank);
+        return { type: PATTERN_TYPES.TRIPLE_WITH_PAIR, mainRank: triple.rank, mainCard: tripleCard, cards: sorted };
       }
     }
-    
-    const straightResult = checkStraight(sorted);
-    if (straightResult) return straightResult;
-    
+
+    // Check straight flush before regular straight
     const flushResult = checkStraightFlush(sorted);
     if (flushResult) return flushResult;
-    
+
+    const straightResult = checkStraight(sorted);
+    if (straightResult) return straightResult;
+
     return null;
   }
   
   if (n === 6) {
     if (sorted.every(c => c.rank === sorted[0].rank)) {
-      return { type: PATTERN_TYPES.BOMB_SIX, mainRank: sorted[0].rank, cards: sorted };
+      return { type: PATTERN_TYPES.BOMB_SIX, mainRank: sorted[0].rank, mainCard: sorted[0], cards: sorted };
     }
-    
+
     const planeResult = checkPlane(sorted, groups, groupCounts);
     if (planeResult) return planeResult;
-    
+
     const straightPairsResult = checkStraightPairs(sorted, groups, groupCounts);
     if (straightPairsResult) return straightPairsResult;
-    
-    const straightResult = checkStraight(sorted);
-    if (straightResult) return straightResult;
-    
+
+    // Check straight flush before regular straight
     const flushResult = checkStraightFlush(sorted);
     if (flushResult) return flushResult;
-    
+
+    const straightResult = checkStraight(sorted);
+    if (straightResult) return straightResult;
+
     return null;
   }
-  
+
   if (n >= 5 && n <= 10) {
-    const straightResult = checkStraight(sorted);
-    if (straightResult) return straightResult;
-    
+    // Check straight flush before regular straight
     const flushResult = checkStraightFlush(sorted);
     if (flushResult) return flushResult;
+
+    const straightResult = checkStraight(sorted);
+    if (straightResult) return straightResult;
   }
   
   if (n >= 6) {
     const straightPairsResult = checkStraightPairs(sorted, groups, groupCounts);
     if (straightPairsResult) return straightPairsResult;
-    
+
     const planeResult = checkPlane(sorted, groups, groupCounts);
     if (planeResult) return planeResult;
-    
+
     const planeWithWings = checkPlaneWithWings(sorted, groups, groupCounts);
     if (planeWithWings) return planeWithWings;
   }
-  
-  if (n === 4) {
-    const jokers = sorted.filter(c => c.isJoker);
-    if (jokers.length === 4) {
-      return { type: PATTERN_TYPES.FOUR_KINGS, mainRank: 'kings', cards: sorted };
-    }
-  }
-  
+
   return null;
 }
 
@@ -199,7 +203,8 @@ function checkStraight(cards) {
     if (!uniqueRanks.includes(validRanks[i])) return null;
   }
   
-  return { type: PATTERN_TYPES.STRAIGHT, mainRank: uniqueRanks[uniqueRanks.length - 1], cards };
+  const mainCard = cards.find(c => c.rank === uniqueRanks[uniqueRanks.length - 1]);
+  return { type: PATTERN_TYPES.STRAIGHT, mainRank: uniqueRanks[uniqueRanks.length - 1], mainCard, cards };
 }
 
 function checkStraightFlush(cards) {
@@ -212,6 +217,7 @@ function checkStraightFlush(cards) {
   return { 
     type: PATTERN_TYPES.STRAIGHT_FLUSH, 
     mainRank: straight.mainRank, 
+    mainCard: straight.mainCard,
     suit: cards[0].suit,
     cards 
   };
@@ -244,9 +250,11 @@ function checkStraightPairs(cards, groups, groupCounts) {
     }
     
     if (isConsecutive) {
+      const mainCard = cards.find(c => c.rank === subset[subset.length - 1]);
       return { 
         type: PATTERN_TYPES.STRAIGHT_PAIRS, 
         mainRank: subset[subset.length - 1],
+        mainCard,
         length: pairCount,
         cards 
       };
@@ -283,9 +291,11 @@ function checkPlane(cards, groups, groupCounts) {
     }
     
     if (isConsecutive) {
+      const mainCard = cards.find(c => c.rank === subset[subset.length - 1]);
       return { 
         type: PATTERN_TYPES.PLANE, 
         mainRank: subset[subset.length - 1],
+        mainCard,
         length: tripleCount,
         cards 
       };
@@ -297,41 +307,45 @@ function checkPlane(cards, groups, groupCounts) {
 
 function checkPlaneWithWings(cards, groups, groupCounts) {
   const triples = groupCounts.filter(g => g.count >= 3);
-  
+
   if (triples.length < 2) return null;
-  
+
   const validRanks = ['3', '4', '5', '6', '7', '8', '9', '10', 'J', 'Q', 'K', 'A'];
   const tripleRanks = triples
     .filter(t => validRanks.includes(t.rank))
     .map(t => t.rank)
     .sort((a, b) => validRanks.indexOf(a) - validRanks.indexOf(b));
-  
+
   for (let len = 2; len <= tripleRanks.length; len++) {
     for (let i = 0; i <= tripleRanks.length - len; i++) {
       const subset = tripleRanks.slice(i, i + len);
       let isConsecutive = true;
-      
+
       for (let j = 0; j < subset.length - 1; j++) {
         if (validRanks.indexOf(subset[j + 1]) - validRanks.indexOf(subset[j]) !== 1) {
           isConsecutive = false;
           break;
         }
       }
-      
+
       if (isConsecutive) {
-        const expectedTotal = len * 4;
-        if (cards.length === expectedTotal) {
-          return { 
-            type: PATTERN_TYPES.PLANE_WITH_WINGS, 
+        // Support both: wings as singles (len * 4) and wings as pairs (len * 5)
+        const expectedWithSingles = len * 4;
+        const expectedWithPairs = len * 5;
+        if (cards.length === expectedWithSingles || cards.length === expectedWithPairs) {
+          const mainCard = cards.find(c => c.rank === subset[subset.length - 1]);
+          return {
+            type: PATTERN_TYPES.PLANE_WITH_WINGS,
             mainRank: subset[subset.length - 1],
+            mainCard,
             length: len,
-            cards 
+            cards
           };
         }
       }
     }
   }
-  
+
   return null;
 }
 

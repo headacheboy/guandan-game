@@ -74,7 +74,7 @@ export function shuffleDeck(deck) {
   return shuffled;
 }
 
-export function dealCards(deck, playerCount = 4) {
+export function dealCards(deck, playerCount = 4, currentLevel = 2) {
   const hands = Array.from({ length: playerCount }, () => []);
   const cardsPerPlayer = Math.floor(deck.length / playerCount);
   
@@ -82,13 +82,49 @@ export function dealCards(deck, playerCount = 4) {
     hands[i % playerCount].push(deck[i]);
   }
   
-  return hands.map(hand => sortCards(hand));
+  return hands.map(hand => sortCards(hand, currentLevel));
 }
 
-export function sortCards(cards) {
+export function sortCards(cards, currentLevel = 2) {
+  const rankOrder = ['2', '3', '4', '5', '6', '7', '8', '9', '10', 'J', 'Q', 'K', 'A'];
+  const levelStr = String(currentLevel);
+  
   return [...cards].sort((a, b) => {
+    if (a.isJoker && b.isJoker) {
+      return a.value - b.value;
+    }
+    if (a.isJoker) return 1;
+    if (b.isJoker) return -1;
+    
+    const aIsLevel = a.rank === levelStr;
+    const bIsLevel = b.rank === levelStr;
+    
+    if (aIsLevel && bIsLevel) {
+      const suitOrder = { spades: 0, hearts: 1, clubs: 2, diamonds: 3 };
+      return (suitOrder[a.suit] || 0) - (suitOrder[b.suit] || 0);
+    }
+    if (aIsLevel) return 1;
+    if (bIsLevel) return -1;
+    
+    const aIdx = rankOrder.indexOf(a.rank);
+    const bIdx = rankOrder.indexOf(b.rank);
+    if (aIdx !== bIdx) return aIdx - bIdx;
+    
+    const suitOrder = { spades: 0, hearts: 1, clubs: 2, diamonds: 3 };
+    return (suitOrder[a.suit] || 0) - (suitOrder[b.suit] || 0);
+  });
+}
+
+export function sortCardsDefault(cards) {
+  return [...cards].sort((a, b) => {
+    if (a.isJoker && b.isJoker) {
+      return a.value - b.value;
+    }
+    if (a.isJoker) return 1;
+    if (b.isJoker) return -1;
+    
     if (a.value !== b.value) return a.value - b.value;
-    const suitOrder = { spades: 0, hearts: 1, clubs: 2, diamonds: 3, joker: 4 };
+    const suitOrder = { spades: 0, hearts: 1, clubs: 2, diamonds: 3 };
     return (suitOrder[a.suit] || 0) - (suitOrder[b.suit] || 0);
   });
 }
