@@ -1,8 +1,12 @@
-import React from 'react';
+import React, { memo, useCallback } from 'react';
 import { SUIT_SYMBOLS, SUIT_COLORS } from '../../game/cards.js';
 import './Card.css';
 
-export default function Card({ card, selected, onClick, faceDown, small }) {
+const Card = memo(function Card({ card, selected, onClick, faceDown, small }) {
+  const handleClick = useCallback(() => {
+    if (onClick) onClick(card);
+  }, [onClick, card]);
+
   if (faceDown) {
     return (
       <div className={`card card-back ${small ? 'card-small' : ''}`}>
@@ -16,9 +20,9 @@ export default function Card({ card, selected, onClick, faceDown, small }) {
   const displayRank = card.isJoker ? '' : card.rank;
 
   return (
-    <div 
+    <div
       className={`card ${selected ? 'card-selected' : ''} ${isRed ? 'card-red' : 'card-black'} ${small ? 'card-small' : ''}`}
-      onClick={onClick}
+      onClick={handleClick}
     >
       <div className="card-corner card-corner-top">
         <span className="card-rank">{displayRank}</span>
@@ -37,4 +41,6 @@ export default function Card({ card, selected, onClick, faceDown, small }) {
       </div>
     </div>
   );
-}
+});
+
+export default Card;

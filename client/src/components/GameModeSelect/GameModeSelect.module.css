@@ -1,0 +1,256 @@
+.overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: linear-gradient(135deg, #1a1a2e 0%, #16213e 50%, #0f3460 100%);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 100;
+}
+
+.modal {
+  background: rgba(255, 255, 255, 0.05);
+  backdrop-filter: blur(10px);
+  border-radius: 20px;
+  padding: 40px;
+  min-width: 400px;
+  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.5);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.title {
+  color: #ffd700;
+  font-size: 32px;
+  text-align: center;
+  margin: 0 0 30px 0;
+}
+
+.modeButtons {
+  display: flex;
+  gap: 20px;
+  justify-content: center;
+}
+
+.modeBtn {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 30px 40px;
+  background: rgba(255, 255, 255, 0.05);
+  border: 2px solid rgba(255, 255, 255, 0.1);
+  border-radius: 16px;
+  cursor: pointer;
+  transition: all 0.3s;
+}
+
+.modeBtn:hover:not(:disabled) {
+  background: rgba(255, 255, 255, 0.1);
+  border-color: #ffd700;
+  transform: translateY(-5px);
+}
+
+.modeBtn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.modeIcon {
+  font-size: 48px;
+  margin-bottom: 10px;
+}
+
+.modeName {
+  color: #fff;
+  font-size: 18px;
+  font-weight: bold;
+  margin-bottom: 5px;
+}
+
+.modeDesc {
+  color: #888;
+  font-size: 14px;
+}
+
+.onlineForm {
+  margin-top: 30px;
+  display: flex;
+  flex-direction: column;
+  gap: 15px;
+}
+
+.onlineForm input {
+  width: 100%;
+  padding: 15px;
+  border: 2px solid rgba(255, 255, 255, 0.1);
+  border-radius: 10px;
+  background: rgba(0, 0, 0, 0.3);
+  color: #fff;
+  font-size: 16px;
+  box-sizing: border-box;
+}
+
+.onlineForm input::placeholder {
+  color: #666;
+}
+
+.onlineForm input:focus {
+  outline: none;
+  border-color: #ffd700;
+}
+
+.roomActions {
+  display: flex;
+  flex-direction: column;
+  gap: 15px;
+}
+
+.createBtn {
+  width: 100%;
+  padding: 15px;
+  background: linear-gradient(135deg, #4caf50 0%, #2e7d32 100%);
+  border: none;
+  border-radius: 10px;
+  color: #fff;
+  font-size: 16px;
+  font-weight: bold;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.createBtn:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 5px 20px rgba(76, 175, 80, 0.4);
+}
+
+.joinForm {
+  display: flex;
+  gap: 10px;
+}
+
+.joinForm input {
+  flex: 1;
+}
+
+.joinBtn {
+  padding: 15px 30px;
+  background: linear-gradient(135deg, #2196f3 0%, #1565c0 100%);
+  border: none;
+  border-radius: 10px;
+  color: #fff;
+  font-size: 16px;
+  font-weight: bold;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.joinBtn:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 5px 20px rgba(33, 150, 243, 0.4);
+}
+
+.error {
+  color: #f44336;
+  text-align: center;
+  padding: 10px;
+  background: rgba(244, 67, 54, 0.1);
+  border-radius: 8px;
+}
+
+.playerList {
+  margin-bottom: 20px;
+}
+
+.playerList h3 {
+  color: #fff;
+  margin: 0 0 15px 0;
+  font-size: 16px;
+}
+
+.playerItem {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 10px 15px;
+  background: rgba(255, 255, 255, 0.05);
+  border-radius: 8px;
+  margin-bottom: 8px;
+}
+
+.playerPos {
+  color: #888;
+  font-size: 14px;
+  width: 60px;
+}
+
+.playerName {
+  color: #fff;
+  flex: 1;
+}
+
+.readyBadge {
+  background: #4caf50;
+  color: #fff;
+  padding: 2px 8px;
+  border-radius: 4px;
+  font-size: 12px;
+}
+
+.actions {
+  display: flex;
+  justify-content: center;
+  margin-bottom: 15px;
+}
+
+.readyBtn {
+  padding: 15px 60px;
+  background: linear-gradient(135deg, #4caf50 0%, #2e7d32 100%);
+  border: none;
+  border-radius: 10px;
+  color: #fff;
+  font-size: 18px;
+  font-weight: bold;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.readyBtn:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 5px 20px rgba(76, 175, 80, 0.4);
+}
+
+.waiting {
+  color: #ffd700;
+  font-size: 16px;
+}
+
+.hint {
+  color: #666;
+  text-align: center;
+  font-size: 14px;
+  margin: 0;
+}
+
+.hint strong {
+  color: #ffd700;
+  font-size: 18px;
+}
+
+/* Responsive */
+@media (max-width: 500px) {
+  .modal {
+    min-width: auto;
+    width: 90%;
+    padding: 30px 20px;
+  }
+
+  .modeButtons {
+    flex-direction: column;
+  }
+
+  .modeBtn {
+    padding: 20px;
+  }
+}

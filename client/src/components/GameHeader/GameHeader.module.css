@@ -1,0 +1,119 @@
+.game-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 12px 24px;
+  background: linear-gradient(180deg, rgba(0, 0, 0, 0.4) 0%, rgba(0, 0, 0, 0.2) 100%);
+  border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.team-score {
+  display: flex;
+  align-items: baseline;
+  gap: 8px;
+}
+
+.team-label {
+  font-size: 14px;
+  color: #888;
+}
+
+.team-level {
+  font-size: 32px;
+  font-weight: bold;
+  color: #ffd700;
+}
+
+.level-suffix {
+  font-size: 14px;
+  color: #888;
+}
+
+.team-a .team-level {
+  color: #4fc3f7;
+}
+
+.team-b .team-level {
+  color: #ff8a65;
+}
+
+.game-info {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+}
+
+.current-level {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.round-number {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.info-label {
+  font-size: 12px;
+  color: #888;
+}
+
+.info-value {
+  font-size: 18px;
+  font-weight: bold;
+  color: #fff;
+}
+
+.level-badge {
+  background: linear-gradient(135deg, #ffd700 0%, #ff8c00 100%);
+  color: #1a1a2e;
+  padding: 2px 12px;
+  border-radius: 12px;
+  font-size: 16px;
+}
+
+.header-actions {
+  display: flex;
+  gap: 8px;
+  position: absolute;
+  right: 24px;
+}
+
+.action-btn {
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  border: none;
+  background: rgba(255, 255, 255, 0.1);
+  font-size: 18px;
+  cursor: pointer;
+  transition: all 0.2s;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.action-btn:hover {
+  background: rgba(255, 255, 255, 0.2);
+  transform: scale(1.1);
+}
+
+/* Responsive */
+@media (max-width: 600px) {
+  .game-header {
+    padding: 8px 16px;
+    flex-wrap: wrap;
+    gap: 8px;
+  }
+
+  .team-level {
+    font-size: 24px;
+  }
+
+  .header-actions {
+    position: static;
+  }
+}
